@@ -1,0 +1,50 @@
+-- Consultar toda la estructura de un Recinto específico (ej: ID 1)
+WITH RECURSIVE jerarquia_ubicaciones AS (
+    -- Miembro Ancla: Empezamos por los niveles superiores (Sectores) del Recinto 1
+    SELECT ubicacion_id, nombre, tipo_ubicacion, padre_id, 1 AS nivel
+    FROM ubicaciones
+    WHERE recinto_id = 1 AND padre_id IS NULL
+
+    UNION ALL
+
+    -- Miembro Recursivo: Buscamos los hijos de los resultados anteriores
+    SELECT u.ubicacion_id, u.nombre, u.tipo_ubicacion, u.padre_id, ju.nivel + 1
+    FROM ubicaciones u
+    INNER JOIN jerarquia_ubicaciones ju ON u.padre_id = ju.ubicacion_id
+)
+SELECT * FROM jerarquia_ubicaciones
+ORDER BY nivel, nombre;
+
+SELECT 
+    e.nombre AS evento,
+    COUNT(t.ticket_id) AS entradas_vendidas,
+    DENSE_RANK() OVER (ORDER BY COUNT(t.ticket_id) DESC) AS ranking_popularidad
+FROM eventos e
+JOIN tickets t ON e.evento_id = t.evento_id
+WHERE t.estado = 'VENDIDO'
+GROUP BY e.nombre
+LIMIT 5;
+
+SELECT 
+    e.nombre AS evento,
+    t.ticket_id,
+    t.precio_base,
+    AVG(t.precio_base) OVER(PARTITION BY e.evento_id) AS precio_promedio_del_evento,
+    t.precio_base - AVG(t.precio_base) OVER(PARTITION BY e.evento_id) AS desviacion_respecto_al_promedio
+FROM tickets t
+JOIN eventos e ON t.evento_id = e.evento_id
+WHERE t.estado = 'VENDIDO'
+LIMIT 100;
+
+SELECT 
+    categoria,
+    nombre,
+    recaudacion_evento,
+    SUM(recaudacion_evento) OVER (PARTITION BY categoria ORDER BY recaudacion_evento DESC) AS recaudacion_acumulada_categoria
+FROM (
+    SELECT e.categoria, e.nombre, SUM(t.precio_base) AS recaudacion_evento
+    FROM eventos e
+    JOIN tickets t ON e.evento_id = t.evento_id
+    WHERE t.estado = 'VENDIDO'
+    GROUP BY e.categoria, e.nombre
+) subquery;
