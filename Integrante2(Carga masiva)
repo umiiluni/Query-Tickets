@@ -1,0 +1,92 @@
+DO $$
+DECLARE
+    r_id INT;
+    s_id INT;
+    f_id INT;
+BEGIN
+    -- 1. LIMPIEZA INICIAL (Para evitar errores de duplicados si reintentas)
+    RAISE NOTICE 'Limpiando tablas...';
+    TRUNCATE TABLE usuarios, recintos, eventos, ubicaciones, tickets, transacciones, transaccion_items RESTART IDENTITY CASCADE;
+
+    -- 2. USUARIOS
+    RAISE NOTICE 'Cargando 1.000.000 de usuarios...';
+    INSERT INTO usuarios (nombre, email, password_hash)
+    SELECT 'Usuario_' || i, 'user' || i || '@ticketera.com', md5(random()::text)
+    FROM generate_series(1, 1000000) AS i;
+
+    -- 3. RECINTOS
+    RAISE NOTICE 'Cargando recintos...';
+    INSERT INTO recintos (nombre, direccion, ciudad, capacidad_total)
+    VALUES 
+        ('Estadio Monumental', 'Av. Figueroa Alcorta 7597', 'CABA', 84000),
+        ('Luna Park', 'Av. Eduardo Madero 420', 'CABA', 9200),
+        ('Movistar Arena', 'Humboldt 450', 'CABA', 15000),
+        ('Orfeo Superdomo', 'Cardeñosa 3450', 'Córdoba', 14000),
+        ('Teatro Colón', 'Cerrito 628', 'CABA', 2478),
+        ('Anfiteatro Rosario', 'Av. Diario La Capital', 'Rosario', 4000),
+        ('Arena Maipú', 'Emilio Civit 791', 'Mendoza', 5000),
+        ('Teatro Gran Rex', 'Av. Corrientes 857', 'CABA', 3262),
+        ('Estadio Mario Kempes', 'Av. Cárcano s/n', 'Córdoba', 57000),
+        ('Estadio Único', 'Calle 25 y 32', 'La Plata', 53000);
+
+    -- 4. EVENTOS
+    RAISE NOTICE 'Cargando eventos...';
+    INSERT INTO eventos (recinto_id, nombre, descripcion, fecha_inicio, fecha_fin, categoria, vigencia_venta)
+    SELECT 
+        (SELECT recinto_id FROM recintos OFFSET floor(random() * 10) LIMIT 1),
+        'Evento Internacional ' || i,
+        'Gran evento nro ' || i,
+        NOW() + (i || ' days')::interval,
+        NOW() + (i || ' days 3 hours')::interval,
+        (ARRAY['Recital', 'Teatro', 'Festival', 'Deportivo'])[floor(random()*4)+1],
+        tsrange(NOW()::timestamp, (NOW() + (i || ' days')::interval)::timestamp)
+    FROM generate_series(1, 50) AS i;
+
+    -- 5. UBICACIONES (JERARQUÍA)
+    RAISE NOTICE 'Generando estructura física (Sectores, Filas, Asientos)...';
+    FOR r_id IN (SELECT recinto_id FROM recintos) LOOP
+        FOR sect IN 1..10 LOOP
+            INSERT INTO ubicaciones (recinto_id, nombre, tipo_ubicacion)
+            VALUES (r_id, 'Sector ' || sect, 'SECTOR')
+            RETURNING ubicacion_id INTO s_id;
+
+            FOR fila IN 1..20 LOOP
+                INSERT INTO ubicaciones (padre_id, recinto_id, nombre, tipo_ubicacion)
+                VALUES (s_id, r_id, 'Fila ' || fila, 'FILA')
+                RETURNING ubicacion_id INTO f_id;
+
+                INSERT INTO ubicaciones (padre_id, recinto_id, nombre, tipo_ubicacion, es_asiento_final)
+                SELECT f_id, r_id, 'Asiento ' || a, 'ASIENTO', TRUE
+                FROM generate_series(1, 50) AS a;
+            END LOOP;
+        END LOOP;
+    END LOOP;
+
+    -- 6. TICKETS (EL MILLÓN)
+    RAISE NOTICE 'Generando 1.000.000 de tickets...';
+    INSERT INTO tickets (evento_id, ubicacion_id, precio_base, estado, metadatos)
+    SELECT 
+        (SELECT evento_id FROM eventos OFFSET floor(random() * 50) LIMIT 1),
+        u.ubicacion_id,
+        (random() * 10000 + 1500)::numeric(12,2),
+        (ARRAY['DISPONIBLE', 'VENDIDO', 'RESERVADO', 'BLOQUEADO'])[floor(random()*4)+1],
+        CASE 
+            WHEN random() > 0.8 THEN '{"vip": true, "estacionamiento": "Zona A"}'::jsonb
+            ELSE '{}'::jsonb
+        END
+    FROM (
+        SELECT ubicacion_id FROM ubicaciones WHERE es_asiento_final = TRUE LIMIT 100000
+    ) AS u
+    CROSS JOIN generate_series(1, 10) AS gs
+    LIMIT 1000000;
+
+    -- 7. TRANSACCIONES
+    RAISE NOTICE 'Cargando transacciones y vinculando items...';
+    INSERT INTO transacciones (usuario_id, total, metodo_pago, estado_pago)
+    SELECT floor(random() * 999999 + 1)::int, 0, 'MercadoPago', 'COMPLETADO'
+    FROM generate_series(1, 500000);
+
+    RAISE NOTICE '¡CARGA MASIVA FINALIZADA EXITOSAMENTE!';
+END $$;
+
+ANALYZE;
