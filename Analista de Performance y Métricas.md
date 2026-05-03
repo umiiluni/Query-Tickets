@@ -12,7 +12,7 @@ Descripción: El índice GIN (Generalized Inverted Index) permite indexar las ll
 
 Comparativa:
 
-![Texto alternativo](Diagramas antes de optimizar/GIN.png)
+![Texto alternativo](umiiluni/Query-Tickets/Diagramas antes de optimizar/GIN.png)
 
 Sin Índice: 667 ms (Ejecución vía Seq Scan).
 
