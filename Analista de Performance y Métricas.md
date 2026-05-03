@@ -12,6 +12,8 @@ Descripción: El índice GIN (Generalized Inverted Index) permite indexar las ll
 
 Comparativa:
 
+![Texto alternativo](Diagramas antes de optimizar/GIN.png)
+
 Sin Índice: 667 ms (Ejecución vía Seq Scan).
 
 Con Índice: 310 ms (Ejecución vía Bitmap Index Scan).
@@ -45,10 +47,12 @@ Descripción: Permite indexar tipos de datos complejos como rangos de tiempo (ts
 
 Observación Técnica: En las pruebas actuales, el planificador mantuvo un Seq Scan debido al bajo volumen de la tabla eventos (48 filas). No obstante, el índice es funcional y su beneficio será exponencial conforme aumente la cantidad de eventos registrados.
 
+
+
 Análisis de Métricas con pg_stat_statements
 La extensión pg_stat_statements es una herramienta de monitoreo que registra estadísticas de todas las sentencias SQL ejecutadas por el servidor. A diferencia de un EXPLAIN ANALYZE que mide una ejecución aislada, este módulo permite identificar patrones de carga y las consultas que más recursos consumen acumulativamente.
 
-Según el reporte extraído (captura adjunta):
+Según el reporte extraído:
 
 Uso: Se observa que las consultas de diagnóstico (EXPLAIN) y los procesos de mantenimiento (como reset) son registrados con precisión.
 
