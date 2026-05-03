@@ -12,9 +12,11 @@ Descripción: El índice GIN (Generalized Inverted Index) permite indexar las ll
 
 Comparativa:
 
-![Logo](./umiiluni/Query-Tickets/Diagramas-antes/GIN.png)
+![Logo](Diagramas-antes/GIN.png)
 
 Sin Índice: 667 ms (Ejecución vía Seq Scan).
+
+![Logo](Diagramas-despues/GIN.png)
 
 Con Índice: 310 ms (Ejecución vía Bitmap Index Scan).
 
@@ -25,7 +27,11 @@ Descripción: Diseñado específicamente para comparaciones de igualdad (=). Es 
 
 Comparativa:
 
+![Logo](Diagramas-antes/HASH.png)
+
 Sin Índice: 949 ms (Requirió Parallel Seq Scan con 3 workers).
+
+![Logo](Diagramas-despues/HASH.png)
 
 Con Índice: 10,8 ms (Ejecución vía Index Scan).
 
@@ -36,7 +42,11 @@ Descripción: Estructura equilibrada ideal para operadores de comparación y ran
 
 Comparativa:
 
+![Logo](Diagramas-antes/B-Tree.png)
+
 Sin Índice: 456 ms.
+
+![Logo](Diagramas-despues/B-Tree.png)
 
 Con Índice: 349 ms.
 
@@ -45,12 +55,20 @@ Conclusión: Se optimizó la recuperación de tickets por rango de precio, elimi
 4. Índice GiST (Rangos Temporales)
 Descripción: Permite indexar tipos de datos complejos como rangos de tiempo (tsrange), soportando operadores de inclusión y solapamiento.
 
+![Logo](Diagramas-antes/GIST.png)
+
+![Logo](Diagramas-despues/GIST.png)
+
+
 Observación Técnica: En las pruebas actuales, el planificador mantuvo un Seq Scan debido al bajo volumen de la tabla eventos (48 filas). No obstante, el índice es funcional y su beneficio será exponencial conforme aumente la cantidad de eventos registrados.
 
 
 
 Análisis de Métricas con pg_stat_statements
 La extensión pg_stat_statements es una herramienta de monitoreo que registra estadísticas de todas las sentencias SQL ejecutadas por el servidor. A diferencia de un EXPLAIN ANALYZE que mide una ejecución aislada, este módulo permite identificar patrones de carga y las consultas que más recursos consumen acumulativamente.
+
+![Logo](pg_stat_statements.png)
+
 
 Según el reporte extraído:
 
