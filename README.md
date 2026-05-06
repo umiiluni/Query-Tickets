@@ -13,3 +13,6 @@ En la actualidad, la organización de eventos masivos (recitales, obras de teatr
 
 ### Objetivo Técnico
 Demostrar que es posible mantener la integridad referencial (3NF) y la consistencia de los datos mientras se procesa una carga superior al 1.000.000 de registros, garantizando tiempos de respuesta mínimos mediante el análisis y optimización del Query Planner de PostgreSQL.
+
+Link a plantilla del proyecto en Drive
+https://docs.google.com/document/d/1Mdxy4bTwR4yIG9ggeNpwXmmbmvdT_tMVWjkQWkgdM2g/edit?usp=sharing    
