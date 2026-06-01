@@ -1,0 +1,27 @@
+ 
+-- ROL: ESPECIALISTA EN OPTIMIZACIÓN (Integrante 3)
+-- TAREA: Estrategias de Indexación Avanzada
+
+-- B-Tree para búsquedas de transacciones por fecha (optimiza reportes temporales)
+CREATE INDEX idx_transacciones_fecha ON transacciones USING btree (fecha_compra);
+
+-- B-Tree para filtrar tickets por precio (búsquedas por rango de presupuesto)
+CREATE INDEX idx_tickets_precio ON tickets USING btree (precio_base);
+
+-- B-Tree para el email de usuarios (búsqueda rápida en login)
+CREATE INDEX idx_usuarios_email ON usuarios USING btree (email);
+
+-- 2. ÍNDICE HASH (Igualdad exacta en textos largos)
+
+-- Hash para búsqueda exacta por nombre de usuario
+CREATE INDEX idx_usuarios_nombre_hash ON usuarios USING hash (nombre);
+
+-- GIN sobre metadatos de tickets (ej: buscar tickets con "vip": true)
+CREATE INDEX idx_tickets_metadatos_gin ON tickets USING gin (metadatos);
+
+-- 4. ÍNDICE GIST (Generalized Search Tree - Rangos)
+-- Justificación: GiST es el índice por excelencia para tipos de datos geométricos 
+-- o rangos (ranges). Permite realizar operaciones de solapamiento (&&) o inclusión (@>).
+
+-- GiST sobre la vigencia de venta de eventos (para validar disponibilidad en tiempo real)
+CREATE INDEX idx_eventos_vigencia_gist ON eventos USING gist (vigencia_venta);
