@@ -1,0 +1,79 @@
+CREATE TABLE usuarios (
+    usuario_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    email VARCHAR(150) UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    activo BOOLEAN DEFAULT TRUE
+);
+
+
+CREATE TABLE recintos (
+    recinto_id SERIAL PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    direccion TEXT NOT NULL,
+    ciudad VARCHAR(100) NOT NULL,
+    capacidad_total INTEGER NOT NULL
+);
+
+
+CREATE TABLE eventos (
+    evento_id SERIAL PRIMARY KEY,
+    recinto_id INTEGER REFERENCES recintos(recinto_id),
+    nombre VARCHAR(200) NOT NULL,
+    descripcion TEXT,
+    fecha_inicio TIMESTAMP NOT NULL,
+    fecha_fin TIMESTAMP NOT NULL,
+    categoria VARCHAR(50), -- ej: Recital, Teatro, Festival
+    vigencia_venta TSRANGE NOT NULL 
+);
+
+
+--  > Fila > Asiento
+CREATE TABLE ubicaciones (
+    ubicacion_id SERIAL PRIMARY KEY,
+    padre_id INTEGER REFERENCES ubicaciones(ubicacion_id), -- Para CTE Recursiva
+    recinto_id INTEGER REFERENCES recintos(recinto_id),
+    nombre VARCHAR(100) NOT NULL, -- ej: 'Sector Norte', 'Fila A', 'Asiento 12'
+    tipo_ubicacion VARCHAR(20) CHECK (tipo_ubicacion IN ('SECTOR', 'FILA', 'ASIENTO')),
+    es_asiento_final BOOLEAN DEFAULT FALSE -- Indica si es el nivel más bajo
+);
+
+-- 5. Tabla de Tickets (Uso de JSONB para Integrante 3)
+CREATE TABLE tickets (
+    ticket_id SERIAL PRIMARY KEY,
+    evento_id INTEGER REFERENCES eventos(evento_id),
+    ubicacion_id INTEGER REFERENCES ubicaciones(ubicacion_id),
+    precio_base NUMERIC(12, 2) NOT NULL,
+    estado VARCHAR(20) DEFAULT 'DISPONIBLE' CHECK (estado IN ('DISPONIBLE', 'RESERVADO', 'VENDIDO', 'BLOQUEADO')),
+    -- Metadatos variables (Requisito GIN)
+    -- Ejemplo: {"vip": true, "estacionamiento": "Sector A", "kit_bienvenida": "Remera + Gorra"}
+    metadatos JSONB DEFAULT '{}',
+    ultima_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 6. Tabla de Transacciones
+CREATE TABLE transacciones (
+    transaccion_id SERIAL PRIMARY KEY,
+    usuario_id INTEGER REFERENCES usuarios(usuario_id),
+    fecha_compra TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    total NUMERIC(12, 2) NOT NULL,
+    metodo_pago VARCHAR(50),
+    estado_pago VARCHAR(20) DEFAULT 'COMPLETADO'
+);
+
+-- 7. Tabla Detalle de Transacción (Relación N:M entre Tickets y Transacciones)
+CREATE TABLE transaccion_items (
+    item_id SERIAL PRIMARY KEY,
+    transaccion_id INTEGER REFERENCES transacciones(transaccion_id),
+    ticket_id INTEGER REFERENCES tickets(ticket_id),
+    precio_final NUMERIC(12, 2) NOT NULL
+);
+
+-- ==========================================================
+-- COMENTARIOS PARA EL EQUIPO:
+-- ==========================================================
+-- Integrante 2 (Carga Masiva): Poblar 'usuarios', 'recintos', 'ubicaciones' y 'tickets' hasta llegar al 1.000.000.
+-- Integrante 3 (Índices): Aplicar GIN sobre 'tickets.metadatos' y GiST sobre 'eventos.vigencia_venta'.
+-- Integrante 4 (SQL Avanzado): Usar 'ubicaciones.padre_id' para la consulta recursiva de asientos.
+-- Integrante 5 (Performance): Usar 'transacciones' para métricas de volumen y pg_stat_statements. 
