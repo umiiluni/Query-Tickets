@@ -1,0 +1,51 @@
+# Punto D: Seguridad y Blindaje de la Capa de Datos (Hardening)
+
+Para cumplir con las directrices de seguridad avanzada y el principio de **privilegio mínimo**, se diseñó e implementó el procedimiento almacenado `procesar_venta_segura`. Este componente actúa como un intermediario seguro para la ejecución de transacciones críticas, aislando las tablas del acceso directo.
+
+## Consignas Implementadas
+* **Principio de Privilegio Mínimo:** El usuario final de la aplicación no interactúa directamente con las tablas base, sino exclusivamente a través de esta API procedimental.
+* **Contexto de Ejecución Seguro (`SECURITY DEFINER`):** Permite que el procedimiento se ejecute con los privilegios del rol creador (administrador/owner), permitiendo a usuarios limitados operar el flujo de venta sin heredar permisos estructurales sobre las tablas.
+* **Mitigación de Ataques de Inyección (`search_path`):** Se fija explícitamente el entorno de búsqueda para evitar el secuestro de funciones mediante esquemas maliciosos (`public, pg_temp`).
+* **Robustez de Tipos (`%TYPE`):** Se vinculan dinámicamente las variables a la definición de las columnas para evitar desajustes de tipos en producción.
+
+## Código SQL Implementado
+
+```sql
+CREATE OR REPLACE PROCEDURE procesar_venta_segura(
+    p_ticket_id INT,
+    p_usuario_id INT
+)
+LANGUAGE plpgsql
+SECURITY DEFINER                  -- [CONSIGNA: Corre con los privilegios del creador / Abstracción]
+SET search_path = public, pg_temp -- [CONSIGNA: Mitiga ataques de inyección de esquemas]
+AS $$
+DECLARE
+    -- [CONSIGNA: Robustez con %TYPE]
+    v_precio_base  tickets.precio_base%TYPE;
+    v_precio_final tickets.precio_base%TYPE;
+    v_nueva_tx_id  transacciones.transaccion_id%TYPE;
+BEGIN
+    -- 1. Buscar el precio base del ticket solicitado
+    SELECT precio_base INTO v_precio_base FROM tickets WHERE ticket_id = p_ticket_id;
+    
+    -- Validación preventiva de existencia
+    IF v_precio_base IS NULL THEN
+        RAISE EXCEPTION 'El ticket solicitado no existe in el sistema.';
+    END IF;
+    
+    -- 2. Consumo de la función del Punto A para cálculo de tarifas
+    v_precio_final := calcular_precio_final(v_precio_base);
+
+    -- 3. Modificación del inventario
+    UPDATE tickets SET estado = 'VENDIDO' WHERE ticket_id = p_ticket_id;
+
+    -- 4. Registrar cabecera de la transacción
+    INSERT INTO transacciones (usuario_id, fecha_compra, total, metodo_pago, estado_pago)
+    VALUES (p_usuario_id, CURRENT_TIMESTAMP, v_precio_final, 'TARJETA', 'APROBADO')
+    RETURNING transaccion_id INTO v_nueva_tx_id;
+
+    -- 5. Registrar ítems de la transacción
+    INSERT INTO transaccion_items (transaccion_id, ticket_id, precio_final)
+    VALUES (v_nueva_tx_id, p_ticket_id, v_precio_final);
+END;
+$$;
