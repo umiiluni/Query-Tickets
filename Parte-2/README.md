@@ -13,9 +13,9 @@ Marquen con una `X` dentro de los corchetes `[ ]` (ej: `[x]`) las tareas complet
 - [X] **3.** Implementar la lógica de reversión parcial (`ROLLBACK TO SAVEPOINT`) ante un error controlado.
 
 ### C. Capa de Auditoría y Forense de Datos
-- [ ] **1.** Crear la tabla física `audit_logs` con los campos necesarios para metadatos del sistema.
-- [ ] **2.** Implementar bloques estructurados `EXCEPTION` en los puntos críticos de los scripts.
-- [ ] **3.** Utilizar `GET STACKED DIAGNOSTICS` para extraer de forma limpia el `RETURNED_SQLSTATE` y el `MESSAGE_TEXT`.
+- [X] **1.** Crear la tabla física `audit_logs` con los campos necesarios para metadatos del sistema.
+- [X] **2.** Implementar bloques estructurados `EXCEPTION` en los puntos críticos de los scripts.
+- [X] **3.** Utilizar `GET STACKED DIAGNOSTICS` para extraer de forma limpia el `RETURNED_SQLSTATE` y el `MESSAGE_TEXT`.
 
 ### D. Seguridad y Blindaje (Hardening)
 - [ ] **1.** Configurar la cabecera del proceso administrativo crítico bajo el contexto de `SECURITY DEFINER`.
