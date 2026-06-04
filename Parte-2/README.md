@@ -3,9 +3,9 @@
 Marquen con una `X` dentro de los corchetes `[ ]` (ej: `[x]`) las tareas completadas a medida que realicen los commits en el repositorio:
 
 ### A. Abstracción y Lógica Procedural
-- [ ] **1.** Categorizar correctamente la volatilidad de la función (`IMMUTABLE`, `STABLE` o `VOLATILE`) analizando el consumo de CPU.
-- [ ] **2.** Diseñar el procedimiento almacenado principal para la tarea compleja de negocio.
-- [ ] **3.** Implementar la robustez de tipos en variables usando `%TYPE`, `%ROWTYPE` o `RECORD` (evitar tipos estáticos).
+- [x] **1.** Categorizar correctamente la volatilidad de la función (`IMMUTABLE`, `STABLE` o `VOLATILE`) analizando el consumo de CPU.
+- [x] **2.** Diseñar el procedimiento almacenado principal para la tarea compleja de negocio.
+- [x] **3.** Implementar la robustez de tipos en variables usando `%TYPE`, `%ROWTYPE` o `RECORD` (evitar tipos estáticos).
 
 ###  B. Gestión Avanzada de Transacciones
 - [X] **1.** Asegurar la atomicidad global del procedimiento mediante sentencias explícitas de `COMMIT` y `ROLLBACK`.
@@ -18,8 +18,8 @@ Marquen con una `X` dentro de los corchetes `[ ]` (ej: `[x]`) las tareas complet
 - [X] **3.** Utilizar `GET STACKED DIAGNOSTICS` para extraer de forma limpia el `RETURNED_SQLSTATE` y el `MESSAGE_TEXT`.
 
 ### D. Seguridad y Blindaje (Hardening)
-- [ ] **1.** Configurar la cabecera del proceso administrativo crítico bajo el contexto de `SECURITY DEFINER`.
-- [ ] **2.** Blindar las funciones restringiendo el vector de ataque mediante la fijación explícita del parámetro `search_path`.
+- [x] **1.** Configurar la cabecera del proceso administrativo crítico bajo el contexto de `SECURITY DEFINER`.
+- [x] **2.** Blindar las funciones restringiendo el vector de ataque mediante la fijación explícita del parámetro `search_path`.
 
 ### E. Automatización con Triggers
 - [X] **1.** Definir la tabla objetivo y la sincronización temporal del disparador (`BEFORE` / `AFTER`).
