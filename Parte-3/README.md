@@ -31,7 +31,7 @@ datos en Redis.
 - [ ] Devolver la respuesta final al cliente en todos los flujos.
 
 ### 4. Buenas Prácticas Técnicas
-- [ ] **Nomenclatura (Namespacing):** Utilizamos el estándar de separación con
-dos puntos (`:`) para las claves. *(Ejemplo: `users:123` o `products:list:active`)*.
-- [ ] **Asignación de TTL:** Toda clave guardada en Redis tiene un tiempo de
+- [X] **Nomenclatura (Namespacing):** Utilizamos el estándar de separación con
+dos puntos (`:`) para las claves. *(Ejemplo: `tickets:123` o `categories:list`)*.
+- [X] **Asignación de TTL:** Toda clave guardada en Redis tiene un tiempo de
 vida (Time-To-Live) configurado.
