@@ -19,3 +19,11 @@ Para optimizar el rendimiento global de la plataforma de gestión de eventos y v
     * **Justificación:** Cuando un cliente hace clic en un evento, el sistema debe renderizar el mapa del Estadio o Teatro (recorriendo la jerarquía de Sectores y Filas que optimizamos en la Fase 1 con la CTE Recursiva). Esta consulta es pesada para la base de datos relacional si se ejecuta miles de veces por minuto. La lectura es masiva, mientras que la estructura física de un recinto (saber cuántas filas tiene la platea del Luna Park o el Estadio Monumental) tiene una **frecuencia de escritura prácticamente nula** (solo cambia ante remodelaciones edilicias del estadio).
     * **Consistencia Eventual:** Este caso tolera una consistencia eventual incluso mayor, pero se fijará un tiempo de expiración controlado para asegurar que cualquier actualización de metadatos del sector se propague de manera automatizada sin intervención manual. *(Nota: Aquí se almacena la estructura física de los sectores/filas, NO el estado de ocupación en tiempo real del asiento individual).*
 
+---
+#### 4. Buenas Prácticas Técnicas (Estándar de Claves y Expiración)
+
+* **A. Nomenclatura Estricta (Namespacing):** Se adopta el estándar de la industria utilizando la separación por dos puntos (`:`) para segmentar los dominios de datos en Redis. Esto permite una organización jerárquica limpia dentro de la memoria RAM, facilitando auditorías de llaves y limpiezas selectivas mediante patrones.
+    * *Sintaxis para listas globales:* `[contexto]:[entidad]:[estado]` $\rightarrow$ `eventos:lista:activos`
+    * *Sintaxis para entidades específicas:* `[contexto]:[entidad]:[identificador]:[id]` $\rightarrow$ `recintos:estructura:id:1`
+
+* **B. Estrategia de Expiración (TTL - Time To Live):** No se permiten llaves persistentes en memoria de manera indefinida (*volatilidad controlada*).
