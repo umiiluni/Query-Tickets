@@ -4,12 +4,12 @@ Esta sección detalla el progreso de la implementación de la capa de
 persistencia políglota utilizando Redis como almacén clave-valor en memoria.
 
 ### 1. Fase de Diseño y Selección
-- [ ] Identificamos 1 o 2 endpoints estratégicos para cachear (alta frecuencia de
+- [x] Identificamos 1 o 2 endpoints estratégicos para cachear (alta frecuencia de
 lectura, baja de escritura).
-- [ ] Listado de endpoints cacheados:
-- *Endpoint 1:* `[RUTA ACÁ]`
-- *Endpoint 2:* `[RUTA ACÁ - Opcional]`
-- [ ] Asegurar que el caso de uso soporta **consistencia eventual** (tolera
+- [x] Listado de endpoints cacheados:
+- *Endpoint 1:* `/api/eventos/activos`
+- *Endpoint 2:* `/api/recintos/:id/estructura`
+- [x] Asegurar que el caso de uso soporta **consistencia eventual** (tolera
 desactualización de 1 o 2 minutos sin romper el sistema).
 
 ### 2. Configuración (Setup)
