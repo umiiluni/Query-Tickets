@@ -13,9 +13,9 @@ lectura, baja de escritura).
 desactualización de 1 o 2 minutos sin romper el sistema).
 
 ### 2. Configuración (Setup)
-- [ ] Instalamos el cliente de Redis en nuestro proyecto.
-- [ ] Establecemos conexión exitosa con el servidor de Redis (Local o Cloud).
-- [ ] Implementamos **Manejo de Errores (Fallback)**: Si Redis se cae, la
+- [X] Instalamos el cliente de Redis en nuestro proyecto.
+- [X] Establecemos conexión exitosa con el servidor de Redis (Local o Cloud).
+- [X] Implementamos **Manejo de Errores (Fallback)**: Si Redis se cae, la
 aplicación registra el error pero sigue funcionando, consultando directamente la
 base de datos principal.
 
