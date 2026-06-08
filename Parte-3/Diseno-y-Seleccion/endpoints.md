@@ -1,4 +1,4 @@
-### 👤 Integrante 2: Desarrollador del Punto 1 (Diseño y Estrategia)
+### Integrante 2: Desarrollador del Punto 1 (Diseño y Estrategia)
 
 **Rol:** Definición de endpoints, justificación de consistencia eventual y diseño de llaves.
 
