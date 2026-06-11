@@ -7,12 +7,17 @@ persistencia políglota utilizando Redis como almacén clave-valor en memoria.
 - [x] Identificamos 1 o 2 endpoints estratégicos para cachear (alta frecuencia de
 lectura, baja de escritura).
 - [x] Listado de endpoints cacheados:
+- *Endpoint 1:* `[RUTA ACÁ]`
+- *Endpoint 2:* `[RUTA ACÁ - Opcional]`
 - *Endpoint 1:* `/api/eventos/activos`
 - *Endpoint 2:* `/api/recintos/:id/estructura`
 - [x] Asegurar que el caso de uso soporta **consistencia eventual** (tolera
 desactualización de 1 o 2 minutos sin romper el sistema).
 
 ### 2. Configuración (Setup)
+- [x] Instalamos el cliente de Redis en nuestro proyecto.
+- [x] Establecemos conexión exitosa con el servidor de Redis (Local o Cloud).
+- [x] Implementamos **Manejo de Errores (Fallback)**: Si Redis se cae, la
 - [X] Instalamos el cliente de Redis en nuestro proyecto.
 - [X] Establecemos conexión exitosa con el servidor de Redis (Local o Cloud).
 - [X] Implementamos **Manejo de Errores (Fallback)**: Si Redis se cae, la
@@ -20,17 +25,21 @@ aplicación registra el error pero sigue funcionando, consultando directamente l
 base de datos principal.
 
 ### 3. Implementación del Patrón Cache-Aside
-- [ ] **Consulta a la Caché:** El endpoint verifica primero si la clave existe en
+- [x] **Consulta a la Caché:** El endpoint verifica primero si la clave existe en
 Redis.
-- [ ] **Cache HIT:** Si el dato existe, se retorna inmediatamente al cliente (se
+- [x] **Cache HIT:** Si el dato existe, se retorna inmediatamente al cliente (se
 evita ir a la DB).
-- [ ] **Cache MISS (Consulta a la DB):** Si el dato NO existe, el sistema realiza
+- [x] **Cache MISS (Consulta a la DB):** Si el dato NO existe, el sistema realiza
 la consulta a la base de datos principal (PostgreSQL, MongoDB, etc.).
-- [ ] **Población de la Caché:** Guardamos el resultado obtenido de la base de
+- [x] **Población de la Caché:** Guardamos el resultado obtenido de la base de
 datos en Redis.
-- [ ] Devolver la respuesta final al cliente en todos los flujos.
+- [x] Devolver la respuesta final al cliente en todos los flujos.
 
 ### 4. Buenas Prácticas Técnicas
+- [x] **Nomenclatura (Namespacing):** Utilizamos el estándar de separación con
+dos puntos (`:`) para las claves. *(Ejemplo: `users:123` o `products:list:active`)*.
+- [x] **Asignación de TTL:** Toda clave guardada en Redis tiene un tiempo de
+vida (Time-To-Live) configurado.
 - [X] **Nomenclatura (Namespacing):** Utilizamos el estándar de separación con
 dos puntos (`:`) para las claves. *(Ejemplo: `tickets:123` o `categories:list`)*.
 - [X] **Asignación de TTL:** Toda clave guardada en Redis tiene un tiempo de
