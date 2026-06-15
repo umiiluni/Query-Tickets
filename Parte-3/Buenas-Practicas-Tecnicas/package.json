@@ -1,8 +1,8 @@
 {
   "name": "query-tickets-parte3",
   "version": "1.0.0",
-  "description": "Integración de Redis con Cache-Aside",
-  "main": "index.js",
+  "description": "Integración de Redis con Cache-Aside - Ticketera de Eventos",
+  "main": "Buenas-Practicas-Tecnicas/cache-service.js",
   "scripts": {
     "test": "node Buenas-Practicas-Tecnicas/test-buenas-practicas.js"
   },

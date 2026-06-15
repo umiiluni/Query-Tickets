@@ -1,45 +1,53 @@
 // ============================================================================
-// PARTE 3: BUENAS PRÁCTICAS TÉCNICAS (NOMENCLATURA Y TTL)
-// INTEGRANTE: [Tu nombre aquí]
+// PARTE 3: SERVICIO DE CACHÉ (NOMENCLATURA, TTL Y PATRÓN CACHE-ASIDE)
+// PROYECTO: TICKET_QUERY - GESTIÓN DE EVENTOS
 // ============================================================================
 
 const { redisClient, checkRedisStatus } = require('../Setup-y-Robustez/setup-redis');
 
-// CONFIGURACIÓN DE TTL (Time-To-Live)
+// ⏱️ CONFIGURACIÓN DE TTL (Time-To-Live en segundos) - Consistencia Eventual
 const TTL_CONFIG = {
-    TICKET_CATEGORIES: 300,    // 5 minutos
-    TICKET_STATUSES: 600,      // 10 minutos
-    USER_PROFILES: 120,        // 2 minutos
-    TICKET_LIST: 180           // 3 minutos
+    EVENTOS_ACTIVOS: 120,      // 2 minutos (Tolerancia estricta según consigna)
+    ESTRUCTURA_RECINTO: 300    // 5 minutos (Baja frecuencia de escritura estructural)
 };
 
-// NOMENCLATURA DE CLAVES (Keyspace Namespacing)
+// 📝 NOMENCLATURA DE CLAVES (Keyspace Namespacing con estándar ":")
 const KEY_PREFIXES = {
-    TICKET: 'tickets',
-    CATEGORY: 'categories',
-    STATUS: 'statuses',
-    USER: 'users'
+    EVENTOS: 'eventos',
+    RECINTOS: 'recintos'
 };
 
+/**
+ * Constructor dinámico de llaves jerárquicas para Redis
+ * @param {string} prefix - Entidad base (eventos / recintos)
+ * @param {string|number} [id] - Identificador específico (opcional)
+ * @returns {string} Clave formateada (ej: "eventos:lista:activos" o "recintos:estructura:id:1")
+ */
 function buildKey(prefix, id) {
-    if (id) {
-        return `${prefix}:${id}`;
+    if (prefix === KEY_PREFIXES.EVENTOS) {
+        return id ? `${prefix}:id:${id}` : `${prefix}:lista:activos`;
     }
-    return `${prefix}:list`;
+    if (prefix === KEY_PREFIXES.RECINTOS) {
+        return id ? `${prefix}:estructura:id:${id}` : `${prefix}:lista`;
+    }
+    return id ? `${prefix}:${id}` : `${prefix}:list`;
 }
 
+/**
+ * Obtener datos desde la Caché de Redis
+ */
 async function getFromCache(key) {
     if (!checkRedisStatus()) {
-        return null;
+        return null; // Escudo Fallback: Si Redis está caído, deriva silenciosamente
     }
 
     try {
         const cachedData = await redisClient.get(key);
         if (cachedData) {
-            console.log(`✅ [CACHE HIT]: Clave ${key} encontrada en caché.`);
+            console.log(`✅ [CACHE HIT]: Clave "${key}" encontrada en memoria RAM.`);
             return JSON.parse(cachedData);
         }
-        console.log(`❌ [CACHE MISS]: Clave ${key} no encontrada en caché.`);
+        console.log(`❌ [CACHE MISS]: Clave "${key}" no encontrada. Buscando en origen...`);
         return null;
     } catch (error) {
         console.error(`⚠️ Error al consultar caché para clave ${key}:`, error.message);
@@ -47,6 +55,9 @@ async function getFromCache(key) {
     }
 }
 
+/**
+ * Guardar datos en la Caché de Redis con un tiempo de expiración controlado
+ */
 async function setInCache(key, data, ttlSeconds) {
     if (!checkRedisStatus()) {
         return false;
@@ -54,7 +65,7 @@ async function setInCache(key, data, ttlSeconds) {
 
     try {
         await redisClient.setEx(key, ttlSeconds, JSON.stringify(data));
-        console.log(`💾 [CACHE SET]: Clave ${key} guardada con TTL de ${ttlSeconds} segundos.`);
+        console.log(`💾 [CACHE SET]: Clave "${key}" guardada exitosamente con un TTL de ${ttlSeconds}s.`);
         return true;
     } catch (error) {
         console.error(`⚠️ Error al guardar en caché la clave ${key}:`, error.message);
@@ -62,6 +73,9 @@ async function setInCache(key, data, ttlSeconds) {
     }
 }
 
+/**
+ * Invalidación manual de caché (Útil para mutaciones de datos por administración)
+ */
 async function invalidateCache(key) {
     if (!checkRedisStatus()) {
         return false;
@@ -69,7 +83,7 @@ async function invalidateCache(key) {
 
     try {
         await redisClient.del(key);
-        console.log(`🗑️ [CACHE INVALIDATE]: Clave ${key} eliminada de caché.`);
+        console.log(`🗑️ [CACHE INVALIDATE]: Clave "${key}" eliminada de forma explícita.`);
         return true;
     } catch (error) {
         console.error(`⚠️ Error al invalidar caché para clave ${key}:`, error.message);
@@ -77,34 +91,40 @@ async function invalidateCache(key) {
     }
 }
 
+/**
+ * Orquestador del Patrón Cache-Aside (Lazy Loading)
+ * @param {string} entityType - Tipo de entidad (KEY_PREFIXES)
+ * @param {string|number} id - Identificador o modificador de consulta
+ * @param {Function} fetchFromDB - Callback con la Query asincrónica de PostgreSQL
+ */
 async function cacheAsideExample(entityType, id, fetchFromDB) {
     const key = buildKey(entityType, id);
+    
+    // 1. Intentar recuperar desde Redis
     let data = await getFromCache(key);
 
+    // 2. [Cache HIT]: Si existía, romper el ciclo y devolver
     if (data) {
         return data;
     }
 
+    // 3. [Cache MISS]: Ejecutar la consulta pesada en PostgreSQL
     data = await fetchFromDB();
 
+    // 4. Población de la caché si la DB devolvió registros
     if (data) {
         let ttl;
         switch (entityType) {
-            case KEY_PREFIXES.CATEGORY:
-                ttl = TTL_CONFIG.TICKET_CATEGORIES;
+            case KEY_PREFIXES.EVENTOS:
+                ttl = TTL_CONFIG.EVENTOS_ACTIVOS;
                 break;
-            case KEY_PREFIXES.STATUS:
-                ttl = TTL_CONFIG.TICKET_STATUSES;
-                break;
-            case KEY_PREFIXES.USER:
-                ttl = TTL_CONFIG.USER_PROFILES;
-                break;
-            case KEY_PREFIXES.TICKET:
-                ttl = TTL_CONFIG.TICKET_LIST;
+            case KEY_PREFIXES.RECINTOS:
+                ttl = TTL_CONFIG.ESTRUCTURA_RECINTO;
                 break;
             default:
-                ttl = 60;
+                ttl = 60; // TTL de resguardo por defecto (1 minuto)
         }
+        
         await setInCache(key, data, ttl);
     }
 
