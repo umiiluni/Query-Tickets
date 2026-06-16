@@ -5,10 +5,7 @@ const { invalidarCacheEventos } = require('./setup-redis');
 const app = express();
 app.use(express.json()); // Permite leer los cuerpos JSON de Postman
 
-// =====================================================================
-// 👤 LO QUE HACES VOS: Emmanuel V.
-// 🟢 PUNTO 1: Alta de Ticket (POST)
-// =====================================================================
+//Método POST
 app.post('/api/eventos', async (req, res) => {
     // Captura tolerante a fallos de formato
     const evento_id = req.body.evento_id;
@@ -44,10 +41,7 @@ app.post('/api/eventos', async (req, res) => {
     }
 });
 
-// =====================================================================
-// 👤 LO QUE HACES VOS: Emmanuel V.
-// 🟡 PUNTO 2: Modificación de Precio (PUT)
-// =====================================================================
+//Método PUT
 app.put('/api/eventos/:id', async (req, res) => {
     const { id } = req.params;
     const { precio_base } = req.body;
@@ -81,9 +75,7 @@ app.put('/api/eventos/:id', async (req, res) => {
     }
 });
 
-// =====================================================================
-// 🔴 LO QUE HIZO TU EQUIPO: Baja Lógica (DELETE)
-// =====================================================================
+//Método DELETE
 app.delete('/api/eventos/:id', async (req, res) => {
     const { id } = req.params;
 
