@@ -1,0 +1,1 @@
+En las capturas se puede apreciar la creación de un ticket (método post) en la base de datos con el número 1000002 y el precio $15000, la modificación del precio a $19500 (método put) y la venta del ticket (método delete).
